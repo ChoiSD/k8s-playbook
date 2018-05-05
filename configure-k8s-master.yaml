@@ -1,0 +1,7 @@
+---
+# Playbook for configure etcd cluster
+
+- name: configure k8s master
+  hosts: master
+  roles:
+    - master

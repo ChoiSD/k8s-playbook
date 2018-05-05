@@ -1,0 +1,17 @@
+{
+  "CN": "system:node:{{ hostvars[item].long_name }}",
+  "key": {
+    "algo": "{{ k8s_algorithm }}",
+    "size": {{ k8s_keysize }}
+  },
+  "hosts": [ "{{ item }}", "{{ hostvars[item].short_name }}", "{{ hostvars[item].long_name }}", "127.0.0.1"],
+  "names": [
+    {
+      "C": "{{ k8s_country }}",
+      "ST": "{{ k8s_state }}",
+      "L": "{{ k8s_city }}",
+      "O": "system:nodes",
+      "OU": "{{ k8s_organization_unit }}"
+    }
+  ]
+}

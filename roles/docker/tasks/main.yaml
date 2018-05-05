@@ -1,0 +1,10 @@
+---
+# Playbook for installing docker
+
+- import_tasks: install-docker.yaml
+  become: yes
+  when: inventory_hostname != groups.admin.0
+
+- import_tasks: set-etc-hosts.yaml
+  become: yes
+  when: inventory_hostname != groups.admin.0

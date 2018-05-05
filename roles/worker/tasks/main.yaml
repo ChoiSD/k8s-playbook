@@ -1,0 +1,11 @@
+---
+# Playbook for master node of Kubernetes
+
+- import_tasks: kube-proxy.yaml
+  become: yes
+
+- import_tasks: haproxy.yaml
+  become: yes
+
+- import_tasks: kubelet.yaml
+  become: yes

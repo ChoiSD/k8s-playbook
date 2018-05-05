@@ -1,0 +1,7 @@
+---
+# Do pre-reqs
+
+- name: Prepare certificates
+  hosts: admin
+  roles:
+  - admin

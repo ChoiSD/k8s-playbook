@@ -1,0 +1,75 @@
+---
+# Playbook for making certs for etcd cluster & client
+
+- name: Create k8s-cert directory
+  file: path={{ k8s_cert_location }} state=directory mode=0755
+
+- name: Copy CA config file (k8s)
+  template:
+    src: "templates/k8s/ca-config.json.j2"
+    dest: "{{ k8s_cert_location }}/ca-config.json"
+    mode: 0644
+
+- name: Copy CA CSR file (k8s)
+  template:
+    src: "templates/k8s/ca-csr.json.j2"
+    dest: "{{ k8s_cert_location }}/ca-csr.json"
+    mode: 0644
+
+- name: Generate CA certificate (k8s)
+  shell: "/tmp/cfssl gencert -initca ca-csr.json | /tmp/cfssljson -bare ca"
+  args:
+    chdir: "{{ k8s_cert_location }}"
+    creates:
+    - "ca.pem"
+    - "ca-key.pem"
+
+- name: Copy kube-apiserver CSR file (k8s)
+  template:
+    src: "templates/k8s/apiserver-csr.json.j2"
+    dest: "{{ k8s_cert_location }}/kube-apiserver-{{ hostvars[item].short_name }}-csr.json"
+    mode: 0644
+  with_items: "{{ groups['master'] }}"
+
+- name: Genearate kube-apiserver certificates (k8s)
+  shell: "/tmp/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=peer kube-apiserver-{{ hostvars[item].short_name }}-csr.json | /tmp/cfssljson -bare kube-apiserver-{{ hostvars[item].short_name }}"
+  args:
+    chdir: "{{ k8s_cert_location }}"
+  with_items: "{{ groups['master'] }}"
+
+- name: Copy kubelet CSR file (k8s)
+  template:
+    src: "templates/k8s/kubelet-csr.json.j2"
+    dest: "{{ k8s_cert_location }}/kubelet-{{ hostvars[item].short_name }}-csr.json"
+    mode: 0644
+  when: item != 'localhost'
+  with_items: "{{ groups['all'] }}"
+
+- name: Generate kubelet certificates (k8s)
+  shell: "/tmp/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=peer kubelet-{{ hostvars[item].short_name }}-csr.json | /tmp/cfssljson -bare kubelet-{{ hostvars[item].short_name }}"
+  args:
+    chdir: "{{ k8s_cert_location }}"
+  when: item != 'localhost'
+  with_items: "{{ groups['all'] }}"
+
+- name: Copy kube-proxy CSR file (k8s)
+  template:
+    src: "templates/k8s/kube-proxy-csr.json.j2"
+    dest: "{{ k8s_cert_location }}/kube-proxy-csr.json"
+    mode: 0644
+
+- name: Generate kube-proxy certificate (k8s)
+  shell: "/tmp/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client kube-proxy-csr.json | /tmp/cfssljson -bare kube-proxy"
+  args:
+    chdir: "{{ k8s_cert_location }}"
+
+- name: Copy admin CSR file (k8s)
+  template:
+    src: "templates/k8s/admin-csr.json.j2"
+    dest: "{{ k8s_cert_location }}/admin-csr.json"
+    mode: 0644
+
+- name: Generate client certificate (k8s)
+  shell: "/tmp/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client admin-csr.json | /tmp/cfssljson -bare admin"
+  args:
+    chdir: "{{ k8s_cert_location }}"

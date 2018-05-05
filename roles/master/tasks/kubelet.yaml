@@ -1,0 +1,49 @@
+---
+# Task for kubelet
+
+- name: Copy kubelet bianry file
+  copy: src="{{ playbook_dir }}/kubelet" dest="/usr/local/bin/kubelet" owner=root group=root mode=0755
+
+- name: Make directories for k8s
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - "/var/lib/kubelet/manifests"
+    - "/var/log/k8s"
+    - "/var/lib/etcd/data"
+    - "/var/lib/kube-apiserver"
+
+- name: Copy certificates
+  command: "scp -i {{ ansible_env.HOME }}/.ssh/id_rsa {{ item.src }} root@{{ inventory_hostname }}:{{ item.dest }}"
+  delegate_to: "{{ groups['admin'].0 }}"
+  become: no
+  with_items:
+  - { src: "{{ etcd_cert_location }}/ca.pem", dest: "/var/lib/etcd/ca.pem" }
+  - { src: "{{ etcd_cert_location }}/ca.pem", dest: "/var/lib/kube-apiserver/etcd-ca.pem" }
+  - { src: "{{ etcd_cert_location }}/client.pem", dest: "/var/lib/kube-apiserver/etcd-client.pem" }
+  - { src: "{{ etcd_cert_location }}/client-key.pem", dest: "/var/lib/kube-apiserver/etcd-client-key.pem" }
+  - { src: "{{ etcd_cert_location }}/{{ short_name }}.pem", dest: "/var/lib/etcd/etcd.pem" }
+  - { src: "{{ etcd_cert_location }}/{{ short_name }}-key.pem", dest: "/var/lib/etcd/etcd-key.pem" }
+  - { src: "{{ k8s_cert_location }}/ca.pem", dest: "/var/lib/kubelet/ca.pem" }
+  - { src: "{{ k8s_cert_location }}/kubelet-{{ short_name }}.pem", dest: "/var/lib/kubelet/kubelet.pem" }
+  - { src: "{{ k8s_cert_location }}/kubelet-{{ short_name }}-key.pem", dest: "/var/lib/kubelet/kubelet-key.pem" }
+  - { src: "{{ k8s_cert_location }}/ca.pem", dest: "/var/lib/kube-apiserver/ca.pem" }
+  - { src: "{{ k8s_cert_location }}/ca-key.pem", dest: "/var/lib/kube-apiserver/ca-key.pem" }
+  - { src: "{{ k8s_cert_location }}/kube-apiserver-{{ short_name }}.pem", dest: "/var/lib/kube-apiserver/kube-apiserver.pem" }
+  - { src: "{{ k8s_cert_location }}/kube-apiserver-{{ short_name }}-key.pem", dest: "/var/lib/kube-apiserver/kube-apiserver-key.pem" }
+
+- name: Register kubernetes services
+  template: src="{{ item.src }}" dest="{{ item.dest }}" owner=root group=root mode=0644
+  with_items:
+  - { src: "kubelet.service.j2", dest: "/etc/systemd/system/kubelet.service" }
+  - { src: "kubelet.kubeconfig.j2", dest: "/var/lib/kubelet/kubeconfig" }
+  - { src: "etcd.manifest.j2", dest: "/var/lib/kubelet/manifests/etcd.manifest" }
+  - { src: "encryption-config.yaml.j2", dest: "/var/lib/kube-apiserver/encryption-config.yaml" }
+  - { src: "kube-apiserver.manifest.j2", dest: "/var/lib/kubelet/manifests/kube-apiserver.manifest" }
+  - { src: "kube-controller.manifest.j2", dest: "/var/lib/kubelet/manifests/kube-controller.manifest" }
+  - { src: "kube-scheduler.manifest.j2", dest: "/var/lib/kubelet/manifests/kube-scheduler.manifest" }
+
+- name: Reload systemd daemon
+  command: systemctl --system daemon-reload
+
+- name: Start kubelet service
+  service: name=kubelet enabled=yes state=started

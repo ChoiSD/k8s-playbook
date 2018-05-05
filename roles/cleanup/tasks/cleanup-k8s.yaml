@@ -1,0 +1,27 @@
+---
+# Uninstall k8s components
+
+- name: Stop kubelet service
+  service: name=kubelet state=stopped enabled=no
+
+- name: Clear docker containers
+  command: bash -c "docker rm -f $(docker ps -aq)"
+  ignore_errors: true
+
+- name: Unmount all filesystem namespaces
+  shell: mount | grep kube | awk '{print "umount " $3}' | sh
+
+- name: Cleanup k8s files
+  file: path={{ item }} state=absent force=yes
+  with_items:
+  - "/etc/systemd/system/kubelet.service"
+  - "/var/lib/kubelet"
+  - "/var/lib/kube-apiserver"
+  - "/var/lib/etcd"
+  - "/var/log/k8s"
+  - "/usr/local/bin/kubelet"
+  - "/usr/local/bin/kubectl"
+  - "/root/.kube"
+
+- name: Reload systemd daemon
+  command: systemctl --system daemon-reload

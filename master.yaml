@@ -1,0 +1,33 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Set variable
+      command: bash -c "base64 {{ playbook_dir }}/etcd-cert/{{ item.src }} | tr -d '\n'"
+      register: etcd_var
+      with_items:
+        - { src: "ca.pem", name: "etcd_ca" }
+        - { src: "client.pem", name: "etcd_cert" }
+        - { src: "client-key.pem", name: "etcd_key" }
+    - set_fact:
+        "{{ item.item.name }}": "{{ item.stdout }}"
+      with_items:
+        - "{{ etcd_var.results }}"
+
+    - name: Set encryption key of encryption-config
+      command: bash -c "head -c 32 /dev/urandom | base64"
+      register: encryption_key
+    - set_fact: encryption_key={{ encryption_key.stdout }}
+
+    - name: Set etcd token
+      command: bash -c "head -c 9 /dev/urandom | base64"
+      register: etcd_token
+    - set_fact: etcd_token={{ etcd_token.stdout }}
+
+- name: configure k8s master
+  hosts: master
+  remote_user: centos
+  vars_files:
+    - group_vars/all
+  roles:
+    - master

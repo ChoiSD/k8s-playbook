@@ -1,0 +1,18 @@
+[all:vars]
+ansible_connection=ssh
+ansible_user=centos
+ansible_ssh_pass=centos
+
+[admin]
+localhost ansible_connection=local
+
+[master]
+192.168.100.11	short_name=node1	long_name=node1.sdchoi.local
+192.168.100.12	short_name=node2	long_name=node2.sdchoi.local
+192.168.100.13	short_name=node3	long_name=node3.sdchoi.local
+
+[worker]
+192.168.100.11	short_name=node1	long_name=node1.sdchoi.local
+192.168.100.12	short_name=node2	long_name=node2.sdchoi.local
+192.168.100.13	short_name=node3	long_name=node3.sdchoi.local
+192.168.100.14	short_name=node4	long_name=node4.sdchoi.local

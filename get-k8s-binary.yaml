@@ -1,0 +1,21 @@
+---
+# Do pre-reqs
+
+- name: Get binary files
+  hosts: localhost
+  connection: local
+  tasks:
+  - name: Check if binary files exist
+    stat: path={{ playbook_dir }}/{{ item.name }}
+    register: binary_stat
+    with_items:
+    - { name: "kubectl", url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s_version }}/bin/linux/amd64/kubectl" }
+    - { name: "kubelet", url: "https://storage.googleapis.com/kubernetes-release/release/{{ k8s_version }}/bin/linux/amd64/kubelet" }
+
+  - name: Get binary files from Internet
+    get_url:
+      url: "{{ item.item.url }}"
+      dest: "{{ playbook_dir }}/{{ item.item.name }}"
+      mode: 0755
+    when: item.stat.exists == false
+    with_items: "{{ binary_stat.results }}"

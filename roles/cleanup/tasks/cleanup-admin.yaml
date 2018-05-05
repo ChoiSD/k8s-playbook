@@ -1,0 +1,10 @@
+---
+# Cleanup files on admin node
+
+- name: Delete files
+  file: path={{ item }} state=absent force=yes
+  with_items:
+  - "{{ etcd_cert_location }}"
+  - "{{ k8s_cert_location }}"
+  - "/tmp/cfssl"
+  - "/tmp/cfssljson"

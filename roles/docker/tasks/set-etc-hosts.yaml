@@ -1,0 +1,11 @@
+---
+# Playbook for installing docker
+
+- name: Edit /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '^{{ item }}'
+    line: '{{ item }} {{ hostvars[item].short_name }} {{ hostvars[item].long_name }}'
+    state: present
+  when: item != groups.admin.0
+  with_items: "{{ groups['all'] }}"

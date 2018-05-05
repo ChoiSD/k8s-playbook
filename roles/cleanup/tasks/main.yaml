@@ -1,0 +1,8 @@
+---
+
+- import_tasks: cleanup-k8s.yaml
+  become: yes
+  when: inventory_hostname != groups.admin.0
+
+- import_tasks: cleanup-admin.yaml
+  when: inventory_hostname == groups.admin.0

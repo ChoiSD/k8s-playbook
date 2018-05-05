@@ -1,0 +1,21 @@
+{
+  "signing": {
+    "default": {
+      "expiry": "{{ k8s_expiry_time }}"
+    },
+    "profiles": {
+      "peer": {
+        "usages": ["signing", "key encipherment", "server auth", "client auth"],
+        "expiry": "{{ k8s_expiry_time }}"
+      },
+      "server": {
+        "usages": ["signing", "key encipherment", "server auth"],
+        "expiry": "{{ k8s_expiry_time }}"
+      },
+      "client": {
+        "usages": [ "signing", "key encipherment", "client auth" ],
+        "expiry": "{{ k8s_expiry_time }}"
+      }
+    }
+  }
+}

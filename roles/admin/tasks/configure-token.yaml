@@ -1,0 +1,22 @@
+---
+# Configure tokens
+
+- name: Get CA certificate of Etcd cluster
+  command: bash -c "base64 {{ etcd_cert_location }}/ca.pem | tr -d '\n'"
+  register: etcd_ca
+
+- name: Get client certificate of Etcd cluster
+  command: bash -c "base64 {{ etcd_cert_location }}/client.pem | tr -d '\n'"
+  register: etcd_cert
+
+- name: Get client key of Etcd cluster
+  command: bash -c "base64 {{ etcd_cert_location }}/client-key.pem | tr -d '\n'"
+  register: etcd_key
+
+- name: Set etcd token
+  command: bash -c "head -c 9 /dev/urandom | base64"
+  register: etcd_token
+
+- name: Set encryption key
+  command: bash -c "head -c 32 /dev/urandom | base64"
+  register: encryption_key

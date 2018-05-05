@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-server
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - image: {{ etcd_image }}
+    name: etcd
+    command:
+    - /usr/local/bin/etcd
+    - --name={{ short_name }}
+    - --advertise-client-urls=https://localhost:{{ etcd_client_port }},https://{{ inventory_hostname }}:{{ etcd_client_port }}
+    - --client-cert-auth
+    - --trusted-ca-file=/etc/ssl/ca.pem
+    - --cert-file=/etc/ssl/etcd_pem
+    - --key-file=/etc/ssl/etcd-key.pem
+    - --data-dir=/etcd-data
+    - --initial-advertise-peer-urls=https://{{ inventory_hostname }}:{{ etcd_peer_port }}
+    - --initial-cluster={% for node in groups['master'] %}{{ hostvars[node].short_name }}=https://{{ node }}:{{ etcd_peer_port }}{% if loop.index != loop.length %},{% endif %}{% endfor %} 
+    - --initial-cluster-token={{ hostvars[groups.admin.0].etcd_token.stdout }}
+    - --initial-cluster-state=new
+    - --listen-client-urls=https://localhost:{{ etcd_client_port }},https://{{ inventory_hostname }}:{{ etcd_client_port }}
+    - --listen-peer-urls=https://{{ inventory_hostname }}:{{ etcd_peer_port }}
+    - --peer-client-cert-auth
+    - --peer-trusted-ca-file=/etc/ssl/ca.pem
+    - --peer-cert-file=/etc/ssl/etcd_pem
+    - --peer-key-file=/etc/ssl/etcd-key.pem
+    ports:
+    - containerPort: {{ etcd_peer_port }}
+      hostPort: {{ etcd_peer_port }}
+      name: serverport
+    - containerPort: {{ etcd_client_port }}
+      hostPort: {{ etcd_client_port }}
+      name: clientport
+    volumeMounts:
+    - mountPath: /etcd-data
+      name: varetcd
+    - mountPath: /etc/ssl/ca.pem
+      name: ca-cert
+      readOnly: true
+    - mountPath: /etc/ssl/etcd_pem
+      name: etcd-cert
+      readOnly: true
+    - mountPath: /etc/ssl/etcd-key.pem
+      name: etcd-key
+      readOnly: true
+  volumes:
+  - hostPath:
+      path: /var/lib/etcd/data
+    name: varetcd
+  - hostPath:
+      path: /var/lib/etcd/ca.pem
+    name: ca-cert
+  - hostPath:
+      path: /var/lib/etcd/etcd.pem
+    name: etcd-cert
+  - hostPath:
+      path: /var/lib/etcd/etcd-key.pem
+    name: etcd-key

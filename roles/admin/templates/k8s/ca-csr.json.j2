@@ -1,0 +1,16 @@
+{
+  "CN": "k8s CA",
+  "key": {
+    "algo": "{{ k8s_algorithm }}",
+    "size": {{ k8s_keysize }}
+  },
+  "names": [
+    {
+      "C": "{{ k8s_country }}",
+      "ST": "{{ k8s_state }}",
+      "L": "{{ k8s_city }}",
+      "O": "{{ k8s_organization }}",
+      "OU": "{{ k8s_organization_unit }}"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+---
+# Get cfssl binary files in admin
+
+- name: Check if cfssl binary files exist
+  stat: path=/tmp/{{ item.name }}
+  register: cfssl_stat
+  with_items:
+  - { name: "cfssl", url: "https://pkg.cfssl.org/R1.2/cfssl_linux-amd64" }
+  - { name: "cfssljson", url: "https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64" }
+
+- name: Get cfssl binary files
+  get_url:
+    url: "{{ item.item.url }}"
+    dest: "/tmp/{{ item.item.name }}"
+    mode: 0755
+  when: item.stat.exists == false
+  with_items: "{{ cfssl_stat.results }}"

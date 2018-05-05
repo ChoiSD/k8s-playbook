@@ -1,0 +1,9 @@
+---
+# Playbook for master node of Kubernetes
+
+- import_tasks: kubelet.yaml
+  become: yes
+
+- import_tasks: addon.yaml
+  run_once: true
+  become: yes

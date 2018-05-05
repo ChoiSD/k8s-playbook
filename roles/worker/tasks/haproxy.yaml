@@ -1,0 +1,8 @@
+---
+# Task for HAproxy
+
+- name: Copy haproxy files
+  template: src={{ item.src }} dest={{ item.dest }} mode=0644
+  with_items:
+  - { src: "haproxy.cfg.j2", dest: "/etc/haproxy.cfg" }
+  - { src: "haproxy.manifest.j2", dest: "/var/lib/kubelet/manifests/haproxy.manifest" }

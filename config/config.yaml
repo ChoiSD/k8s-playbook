@@ -1,0 +1,45 @@
+---
+#################################
+#  Admin                        #
+#################################
+etcd_cert_location: "/tmp/etcd-cert"
+k8s_cert_location: "/tmp/k8s-cert"
+
+#################################
+#  Etcd cluster                 #
+#################################
+etcd_image: "quay.io/coreos/etcd"
+etcd_expiry_time: 87600h
+etcd_algorithm: rsa
+etcd_keysize: 2048
+etcd_country: KR
+etcd_state: Seoul
+etcd_city: "Gangdong-gu"
+etcd_organization: sdchoi
+etcd_organization_unit: "sdchoi Etcd cluster"
+etcd_client_port: 2379
+etcd_peer_port: 2380
+
+
+#################################
+#  k8s cluster                  #
+#################################
+k8s_version: "v1.9.6"
+k8s_expiry_time: 87600h
+k8s_algorithm: rsa
+k8s_keysize: 2048
+k8s_country: KR
+k8s_state: Seoul
+k8s_city: "Gangdong-gu"
+k8s_organization: sdchoi
+k8s_organization_unit: "sdchoi k8s cluster"
+k8s_image: "gcr.io/google_containers/hyperkube-amd64:{{ k8s_version }}"
+k8s_name: k8s-sdchoi
+k8s_pod_cidr: "10.200.0.0/16"
+k8s_svc_cidr: "10.32.0.0/16"
+k8s_dns: "10.32.0.10"
+k8s_svc_ip: "10.32.0.1"
+k8s_domain: "cluster.local"
+k8s_master_port: 6443
+k8s_master_insecure_port: 8080
+k8s_master_proxy_port: 6444

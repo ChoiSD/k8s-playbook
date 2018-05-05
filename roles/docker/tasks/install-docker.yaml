@@ -1,0 +1,18 @@
+---
+# Playbook for installing docker
+
+- name: Install prereqs for docker
+  yum: name={{ item }} state=present
+  with_items:
+  - "device-mapper-persistent-data"
+  - "lvm2"
+  - "socat"
+
+- name: Get docker repository
+  get_url: url="https://download.docker.com/linux/centos/docker-ce.repo" dest="/etc/yum.repos.d/docker-ce.repo" mode=0644
+
+- name: Install docker-ce
+  yum: name=docker-ce state=present
+
+- name: Start docker service
+  service: name=docker enabled=yes state=started

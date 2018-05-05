@@ -1,0 +1,38 @@
+---
+# Task for addon of k8s
+
+- name: Copy 'kubectl' binary
+  copy: src="{{ playbook_dir }}/kubectl" dest=/usr/local/bin/kubectl owner=root group=root mode=0755
+
+- name: Copy Add-on YAML
+  template:
+    src: "{{ item.src }}"
+    dest: "/var/lib/kube-apiserver/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  with_items:
+  - { src: "kube-apiserver-to-kubelet.yaml", dest: "kube-apiserver-to-kubelet.yaml" }
+  - { src: "kube-apiserver-to-kubelet-binding.yaml", dest: "kube-apiserver-to-kubelet-binding.yaml" }
+  - { src: "calico-rbac.yaml", dest: "calico-rbac.yaml" }
+  - { src: "calico.yaml.j2", dest: "calico.yaml" }
+  - { src: "kube-dns.yaml.j2", dest: "kube-dns.yaml" }
+
+- name: Wait for bringing up kube-apiserver
+  wait_for: host=localhost port=8080 sleep=2
+
+- name: Check kube-apiserver's status
+  uri: url=http://localhost:8080/healthz
+  register: result
+  until: result.msg.find("OK") != -1
+  retries: 5
+  delay: 10
+
+- name: Apply add-ons
+  shell: bash -c "/usr/local/bin/kubectl apply -f /var/lib/kube-apiserver/{{ item }}"
+  with_items:
+  - kube-apiserver-to-kubelet.yaml
+  - kube-apiserver-to-kubelet-binding.yaml
+  - calico-rbac.yaml
+  - calico.yaml
+  - kube-dns.yaml

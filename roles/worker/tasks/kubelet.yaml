@@ -1,0 +1,26 @@
+---
+# Task for kubelet
+
+- name: Copy kubelet binary
+  copy: src={{ playbook_dir }}/kubelet dest=/usr/local/bin/kubelet owner=root group=root mode=0755
+
+- name: Copy kubelet certificates
+  command: "scp -i {{ ansible_env.HOME }}/.ssh/id_rsa {{ item.src }} root@{{ inventory_hostname }}:{{ item.dest }}"
+  delegate_to: "{{ groups.admin.0 }}"
+  become: no
+  with_items:
+  - { src: "{{ k8s_cert_location }}/ca.pem", dest: "/var/lib/kubelet/ca.pem" }
+  - { src: "{{ k8s_cert_location }}/kubelet-{{ short_name }}.pem", dest: "/var/lib/kubelet/kubelet.pem" }
+  - { src: "{{ k8s_cert_location }}/kubelet-{{ short_name }}-key.pem", dest: "/var/lib/kubelet/kubelet-key.pem" }
+
+- name: Register kubelet files
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
+  with_items:
+  - { src: "kubelet.service.j2", dest: "/etc/systemd/system/kubelet.service" }
+  - { src: "kubelet.kubeconfig.j2", dest: "/var/lib/kubelet/kubeconfig" }
+
+- name: Reload systemd daemon
+  command: systemctl --system daemon-reload
+
+- name: Start kubelet service
+  service: name=kubelet enabled=yes state=started

@@ -1,0 +1,14 @@
+---
+# This playbook contains common plays that will be run on all nodes.
+
+- import_tasks: get-cfssl-binary.yaml
+
+- import_tasks: make-certs-etcd.yaml
+
+- import_tasks: make-certs-k8s.yaml
+
+- import_tasks: configure-kubeconfig.yaml
+
+- import_tasks: configure-token.yaml
+
+- import_tasks: passwordless-ssh.yaml

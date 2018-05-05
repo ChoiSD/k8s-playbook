@@ -1,0 +1,7 @@
+---
+# Playbook for uninstalling k8s cluster
+
+- name: Cleanup everything
+  hosts: all
+  roles:
+  - cleanup

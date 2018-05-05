@@ -1,0 +1,52 @@
+---
+# Playbook for making certs for etcd cluster & client
+
+- name: Create etcd-cert directory
+  file: path={{ etcd_cert_location }} state=directory mode=0755
+
+- name: Copy CA config file (Etcd)
+  template:
+    src: "templates/etcd/ca-config.json.j2"
+    dest: "{{ etcd_cert_location }}/ca-config.json"
+    mode: 0644
+
+- name: Copy CA CSR file (Etcd)
+  template:
+    src: "templates/etcd/ca-csr.json.j2"
+    dest: "{{ etcd_cert_location }}/ca-csr.json"
+    mode: 0644
+
+- name: Generate CA certificates (Etcd)
+  shell: "/tmp/cfssl gencert -initca ca-csr.json | /tmp/cfssljson -bare ca"
+  args:
+    chdir: "{{ etcd_cert_location }}"
+    creates:
+      - "ca.pem"
+      - "ca-key.pem"
+
+- name: Copy client CSR file (Etcd)
+  template:
+    src: "templates/etcd/client-csr.json.j2"
+    dest: "{{ etcd_cert_location }}/client-csr.json"
+    mode: 0644
+
+- name: Generate client certificate (Etcd)
+  shell: "/tmp/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client-csr.json | /tmp/cfssljson -bare client"
+  args:
+    chdir: "{{ etcd_cert_location }}"
+
+- name: Copy member CSR file (Etcd)
+  template:
+    src: "templates/etcd/member-csr.json.j2"
+    dest: "{{ etcd_cert_location }}/{{ hostvars[item].short_name }}-csr.json"
+    mode: 0644
+  with_items: "{{ groups['master'] }}"
+
+- name: Generate member certificates (Etcd)
+  shell: "/tmp/cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=peer {{ hostvars[item].short_name }}-csr.json | /tmp/cfssljson -bare {{ hostvars[item].short_name }}"
+  args:
+    chdir: "{{ etcd_cert_location }}"
+    creates:
+      - "{{ hostvars[item].short_name }}.pem"
+      - "{{ hostvars[item].short_name }}-key.pem"
+  with_items: "{{ groups['master'] }}"

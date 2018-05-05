@@ -1,0 +1,24 @@
+---
+# Task for kube-proxy
+
+- name: Make directories for k8s worker
+  file: path="{{ item }}" state=directory mode=0755
+  with_items:
+    - "/var/lib/kubelet/manifests"
+    - "/var/log/k8s"
+    - "/var/lib/kube-proxy"
+
+- name: Copy certificate & kubeconfig for kube-proxy
+  command: "scp -i {{ ansible_env.HOME }}/.ssh/id_rsa {{ item.src }} root@{{ inventory_hostname }}:{{ item.dest }}"
+  delegate_to: "{{ groups['admin'].0 }}"
+  become: no
+  with_items:
+    - { src: "{{ k8s_cert_location }}/ca.pem", dest: "/var/lib/kube-proxy/ca.pem" }
+    - { src: "{{ k8s_cert_location }}/kube-proxy.pem", dest: "/var/lib/kube-proxy/kube-proxy.pem" }
+    - { src: "{{ k8s_cert_location }}/kube-proxy-key.pem", dest: "/var/lib/kube-proxy/kube-proxy-key.pem" }
+
+- name: Copy kube-proxy manifest
+  template: src={{ item.src }} dest={{ item.dest }} mode=0644
+  with_items:
+    - { src: "kube-proxy.manifest.j2", dest: "/var/lib/kubelet/manifests/kube-proxy.manifest" }
+    - { src: "kube-proxy.kubeconfig.j2", dest: "/var/lib/kube-proxy/kubeconfig" }

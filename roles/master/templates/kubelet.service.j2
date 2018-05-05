@@ -1,0 +1,30 @@
+[Unit]
+Description=Kubernetes worker
+Documentation=https://github.com/kubernetes/kubernetes
+After=docker.service
+Requires=docker.service
+
+[Service]
+Restart=on-failure
+RestartSec=5
+ExecStart=/usr/local/bin/kubelet \
+ --allow-privileged=true \
+ --anonymous-auth=false \
+ --authorization-mode=Webhook \
+ --client-ca-file=/var/lib/kubelet/ca.pem \
+ --cluster-dns={{ k8s_dns }} \
+ --cluster-domain={{ k8s_domain }} \
+ --image-pull-progress-deadline=2m \
+ --kubeconfig=/var/lib/kubelet/kubeconfig \
+ --network-plugin=cni \
+ --node-ip={{ inventory_hostname }} \
+ --pod-cidr={{ k8s_pod_cidr }} \
+ --pod-manifest-path=/var/lib/kubelet/manifests \
+ --register-node=true \
+ --runtime-request-timeout=15m \
+ --tls-cert-file=/var/lib/kubelet/kubelet.pem \
+ --tls-private-key-file=/var/lib/kubelet/kubelet-key.pem \
+ --v=2
+
+[Install]
+WantedBy=multi-user.target

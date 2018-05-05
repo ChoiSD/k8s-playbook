@@ -1,0 +1,12 @@
+---
+# This playbook deploys kubernetes cluster.
+
+- import_playbook: get-k8s-binary.yaml
+
+- import_playbook: admin.yaml
+
+- import_playbook: docker.yaml
+
+- import_playbook: configure-k8s-master.yaml
+
+- import_playbook: configure-k8s-worker.yaml

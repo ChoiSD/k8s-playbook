@@ -1,0 +1,21 @@
+{
+  "signing": {
+    "default": {
+      "expiry": "{{ etcd_expiry_time }}"
+    },
+    "profiles": {
+      "peer": {
+        "usages": ["signing", "key encipherment", "server auth", "client auth"],
+        "expiry": "{{ etcd_expiry_time }}"
+      },
+      "server": {
+        "usages": ["signing", "key encipherment", "server auth"],
+        "expiry": "{{ etcd_expiry_time }}"
+      },
+      "client": {
+        "usages": [ "signing", "key encipherment", "client auth" ],
+        "expiry": "{{ etcd_expiry_time }}"
+      }
+    }
+  }
+}
