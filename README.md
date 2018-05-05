@@ -5,7 +5,7 @@
 
 ### Clone this repository
 ```
-git clone git@github.ibm.com:sdchoi/k8s-playbook.git
+git clone git@github.com:ChoiSD/k8s-playbook.git
 cd k8s-playbook
 ```
 
